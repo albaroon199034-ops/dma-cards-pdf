@@ -95,6 +95,9 @@ $licenses = $pdo->query("
                     <a href="reports.php" class="list-group-item list-group-item-action">
                         <i class="fas fa-chart-bar ms-2"></i>التقارير
                     </a>
+                    <a href="packages.php" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box ms-2"></i>الباقات
+                    </a>
                     <a href="../logout.php" class="list-group-item list-group-item-action text-danger">
                         <i class="fas fa-sign-out-alt ms-2"></i>تسجيل الخروج
                     </a>
@@ -189,6 +192,7 @@ $licenses = $pdo->query("
                                 <tr>
                                     <th><i class="fas fa-user me-2"></i>المستخدم</th>
                                     <th><i class="fas fa-key me-2"></i>مفتاح الترخيص</th>
+                                    <th><i class="fas fa-print me-2"></i>الكروت المطبوعة</th>
                                     <th><i class="fas fa-credit-card me-2"></i>الكروت المتبقية</th>
                                     <th><i class="fas fa-calendar me-2"></i>تاريخ الانتهاء</th>
                                     <th><i class="fas fa-info-circle me-2"></i>الحالة</th>
@@ -200,11 +204,30 @@ $licenses = $pdo->query("
                                     <tr>
                                         <td class="fw-bold"><?php echo htmlspecialchars($license['username']); ?></td>
                                         <td><code class="bg-light px-2 py-1 rounded"><?php echo $license['license_key']; ?></code></td>
+                                        <td>
+                                            <?php
+                                            echo '<span class="badge bg-primary">' . $license['used_cards'] . '</span>';
+                                            ?>
+                                        </td>
                                         <td><span class="badge bg-info"><?php echo number_format($license['remaining_cards']); ?></span></td>
                                         <td><?php echo date('Y-m-d', strtotime($license['expiry_date'])); ?></td>
                                         <td>
-                                            <span class="badge bg-<?php echo $license['status'] == 'active' ? 'success' : 'danger'; ?>">
-                                                <?php echo $license['status'] == 'active' ? 'نشط' : 'معلق'; ?>
+                                            <?php
+                                            $is_expired = strtotime($license['expiry_date']) < time();
+                                            
+                                            if ($license['status'] == 'suspended') {
+                                                $status_class = 'bg-warning';
+                                                $status_text = 'معلق';
+                                            } elseif ($is_expired) {
+                                                $status_class = 'bg-danger';
+                                                $status_text = 'منتهي';
+                                            } else {
+                                                $status_class = 'bg-success';
+                                                $status_text = 'نشط';
+                                            }
+                                            ?>
+                                            <span class="badge <?php echo $status_class; ?>">
+                                                <?php echo $status_text; ?>
                                             </span>
                                         </td>
                                         

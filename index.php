@@ -5,6 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 require_once 'config/db.php';
+require_once 'ini.php';
 if (isset($_POST['license_key'])) {
     $license_key = strtoupper(preg_replace('/[^A-Z0-9]/', '', trim($_POST['license_key'])));
     if (strlen($license_key) !== 32) {
@@ -47,12 +48,8 @@ $has_active_license = isset($_SESSION['license_id']);
                         <form method="POST">
                             <div class="mb-3">
                                 <label class="form-label">مفتاح الترخيص</label>
-                                <input type="text"
-                                    name="license_key"
-                                    class="form-control form-control-lg text-center"
-                                    required
-                                    maxlength="32"
-                                    placeholder="أدخل مفتاح الترخيص هنا"
+                                <input type="text" name="license_key" class="form-control form-control-lg text-center"
+                                    required maxlength="32" placeholder="أدخل مفتاح الترخيص هنا"
                                     oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
                                     autocomplete="off">
                                 <small class="text-muted">المفتاح يتكون من 32 حرف من الأرقام والحروف الإنجليزية فقط</small>
@@ -89,13 +86,14 @@ $has_active_license = isset($_SESSION['license_id']);
                             $_SESSION['remaining_cards'] = $remaining['remaining_cards'];
                         }
                         ?>
-                        <div class="alert alert-success mb-4 d-flex align-items-center justify-content-between p-3 shadow-sm border-0">
+                        <div
+                            class="alert alert-success mb-4 d-flex align-items-center justify-content-between p-3 shadow-sm border-0">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check-circle fa-2x me-3 text-success"></i>
                                 <div>
                                     <h5 class="mb-1 fw-bold">الترخيص نشط</h5>
                                     <div class="text-success">
-                                        عدد الكروت المتبقية: 
+                                        عدد الكروت المتبقية:
                                         <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold">
                                             <?php echo number_format($_SESSION['remaining_cards']); ?> كارت
                                         </span>
@@ -107,34 +105,48 @@ $has_active_license = isset($_SESSION['license_id']);
                                 تسجيل خروج
                             </a>
                         </div>
-                        <form action="card_layout.php" method="POST" enctype="multipart/form-data" onsubmit="return validateCSVCount();">
+                        <form action="card_layout.php" method="POST" enctype="multipart/form-data"
+                            onsubmit="return validateCSVCount();">
                             <div class="mb-4">
-                                <label class="form-label fw-bold">اختر ملف CSV:</label>
-                                <div class="upload-area">
-                                    <input type="file" class="file-input" name="csv_file" id="csv_file" accept=".csv" required hidden>
-                                    <div class="drop-zone text-center p-5 rounded" id="csvDropZone">
-                                        <i class="fas fa-file-csv fa-3x mb-3 text-primary"></i>
-                                        <h4>اسحب ملف CSV هنا</h4>
-                                        <p class="text-muted">أو</p>
-                                        <button type="button" class="btn btn-outline-dark" onclick="document.getElementById('csv_file').click()">
-                                            اختر ملف
-                                        </button>
-                                        <p class="selected-file mt-2 text-success" id="csvFileName"></p>
+                                <label class="form-label fw-bold">نوع النظام:</label>
+                                <select class="form-select mb-4" name="system_type" required>
+                                    <option value="">اختر نوع النظام</option>
+                                    <option value="redis">ريدياس مانجر</option>
+                                    <option value="pallet">بالتل</option>
+                                    <option value="hawai">برنامج الهوائي bdf</option>
+                                </select>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">اختر ملف CSV:</label>
+                                        <div class="upload-area">
+                                            <input type="file" class="file-input" name="csv_file" id="csv_file" accept=".csv,.pdf,.xlsx" required hidden>
+                                            <div class="drop-zone text-center p-5 rounded" id="csvDropZone">
+                                                <i class="fas fa-file-csv fa-3x mb-3 text-primary"></i>
+                                                <h4>اسحب الملف هنا</h4>
+                                                <p class="text-muted">أو</p>
+                                                <button type="button" class="btn btn-outline-dark" onclick="document.getElementById('csv_file').click()">
+                                                    اختر ملف
+                                                </button>
+                                                <p class="selected-file mt-2 text-success" id="csvFileName"></p>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">اختر تصميم الكارت:</label>
-                                <div class="upload-area">
-                                    <input type="file" class="file-input" name="card_design" id="card_design" accept="image/*" required hidden>
-                                    <div class="drop-zone text-center p-5 rounded" id="imageDropZone">
-                                        <i class="fas fa-image fa-3x mb-3 text-primary"></i>
-                                        <h4>اسحب الصورة هنا</h4>
-                                        <p class="text-muted">أو</p>
-                                        <button type="button" class="btn btn-outline-dark" onclick="document.getElementById('card_design').click()">
-                                            اختر صورة
-                                        </button>
-                                        <p class="selected-file mt-2 text-success" id="imageFileName"></p>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">اختر تصميم الكارت:</label>
+                                        <div class="upload-area">
+                                            <input type="file" class="file-input" name="card_design" id="card_design"
+                                                accept="image/jpeg,image/png,image/jpg" required hidden>
+                                            <div class="drop-zone text-center p-5 rounded" id="imageDropZone">
+                                                <i class="fas fa-image fa-3x mb-3 text-primary"></i>
+                                                <h4>اسحب الصورة هنا</h4>
+                                                <p class="text-muted">أو</p>
+                                                <button type="button" class="btn btn-outline-dark"
+                                                    onclick="document.getElementById('card_design').click()">
+                                                    اختر صورة
+                                                </button>
+                                                <p class="selected-file mt-2 text-success" id="imageFileName"></p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -142,6 +154,9 @@ $has_active_license = isset($_SESSION['license_id']);
                                 <button type="submit" class="btn btn-danger btn-lg px-5">
                                     متابعة لتحديد مواقع العناصر <i class="fas fa-arrow-left me-2"></i>
                                 </button>
+                                <a href="profile.php" class="btn btn-secondary btn-lg px-5 ms-2 mt-2">
+                                    <i class="fas fa-user ms-2"></i>العودة للملف الشخصي
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -221,7 +236,32 @@ $has_active_license = isset($_SESSION['license_id']);
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        const systemTypeSelect = document.querySelector('select[name="system_type"]');
+        const csvFileInput = document.getElementById('csv_file');
+        const csvDropZone = document.getElementById('csvDropZone');
+        const csvFileName = document.getElementById('csvFileName');
+        const csvIcon = csvDropZone.querySelector('i');
+        const cardDesignInput = document.getElementById('card_design');
+        const imageDropZone = document.getElementById('imageDropZone');
+        const imageFileName = document.getElementById('imageFileName');
+
+        function updateFileInputAccept() {
+            const systemType = systemTypeSelect.value;
+            if (systemType === 'hawai') {
+                csvFileInput.accept = '.pdf';
+                csvIcon.className = 'fas fa-file-pdf fa-3x mb-3 text-primary';
+                csvDropZone.querySelector('h4').textContent = 'اسحب ملف PDF هنا';
+            } else {
+                csvFileInput.accept = '.csv';
+                csvIcon.className = 'fas fa-file-csv fa-3x mb-3 text-primary';
+                csvDropZone.querySelector('h4').textContent = 'اسحب ملف CSV هنا';
+            }
+        }
+
+        systemTypeSelect.addEventListener('change', updateFileInputAccept);
+        updateFileInputAccept();
+
         function handleFileSelect(fileInput, fileNameElement, dropZone, isImage = false) {
             const errorElement = document.createElement('div');
             errorElement.className = 'error-message';
@@ -236,7 +276,7 @@ $has_active_license = isset($_SESSION['license_id']);
 
             function validateFile(file) {
                 if (isImage) {
-                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    const maxSize = 15 * 1024 * 1024; // 15MB
                     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
                     if (!allowedTypes.includes(file.type)) {
@@ -250,76 +290,75 @@ $has_active_license = isset($_SESSION['license_id']);
                         return false;
                     }
                 } else {
-                    if (!file.name.endsWith('.csv')) {
-                        errorElement.textContent = 'يرجى اختيار ملف CSV صالح';
-                        errorElement.style.display = 'block';
-                        return false;
+                    const systemType = systemTypeSelect.value;
+                    if (systemType === 'hawai') {
+                        if (!file.name.toLowerCase().endsWith('.pdf')) {
+                            errorElement.textContent = 'يرجى اختيار ملف PDF صالح';
+                            errorElement.style.display = 'block';
+                            return false;
+                        }
+                    } else {
+                        if (!file.name.toLowerCase().endsWith('.csv')) {
+                            errorElement.textContent = 'يرجى اختيار ملف CSV صالح';
+                            errorElement.style.display = 'block';
+                            return false;
+                        }
                     }
                 }
                 errorElement.style.display = 'none';
                 return true;
             }
 
-            fileInput.addEventListener('change', function() {
+            function handleFile(file) {
+                if (!validateFile(file)) {
+                    fileInput.value = '';
+                    fileNameElement.style.display = 'none';
+                    if (imagePreview) imagePreview.style.display = 'none';
+                    return;
+                }
+
+                fileNameElement.textContent = file.name;
+                fileNameElement.style.display = 'block';
+                dropZone.style.borderColor = '#198754';
+
+                if (isImage && imagePreview) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            fileInput.addEventListener('change', function () {
                 if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    if (!validateFile(file)) {
-                        this.value = '';
-                        fileNameElement.style.display = 'none';
-                        if (imagePreview) imagePreview.style.display = 'none';
-                        return;
-                    }
-
-                    fileNameElement.textContent = file.name;
-                    fileNameElement.style.display = 'block';
-                    dropZone.style.borderColor = '#198754';
-
-                    if (isImage && imagePreview) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            imagePreview.src = e.target.result;
-                            imagePreview.style.display = 'block';
-                        }
-                        reader.readAsDataURL(file);
-                    }
+                    handleFile(this.files[0]);
                 }
             });
 
-            dropZone.addEventListener('dragover', function(e) {
+            dropZone.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 this.classList.add('dragover');
             });
 
-            dropZone.addEventListener('dragleave', function(e) {
+            dropZone.addEventListener('dragleave', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
             });
 
-            dropZone.addEventListener('drop', function(e) {
+            dropZone.addEventListener('drop', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
-                fileInput.files = e.dataTransfer.files;
-                if (fileInput.files && fileInput.files[0]) {
-                    fileNameElement.textContent = fileInput.files[0].name;
-                    fileNameElement.style.display = 'block';
-                    this.style.borderColor = '#198754';
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFile(e.dataTransfer.files[0]);
                 }
             });
         }
 
-        handleFileSelect(
-            document.getElementById('csv_file'),
-            document.getElementById('csvFileName'),
-            document.getElementById('csvDropZone'),
-            false
-        );
-
-        handleFileSelect(
-            document.getElementById('card_design'),
-            document.getElementById('imageFileName'),
-            document.getElementById('imageDropZone'),
-            true
-        );
+        handleFileSelect(csvFileInput, csvFileName, csvDropZone, false);
+        handleFileSelect(cardDesignInput, imageFileName, imageDropZone, true);
     });
 </script>
 
@@ -332,7 +371,7 @@ $has_active_license = isset($_SESSION['license_id']);
 
         if (csvFile) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const text = e.target.result;
                 const lines = text.split('\n').length - 1;
 

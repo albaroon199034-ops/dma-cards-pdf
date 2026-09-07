@@ -62,6 +62,9 @@ $recent_activities = $pdo->query("
                     <a href="reports.php" class="list-group-item list-group-item-action">
                         <i class="fas fa-chart-bar ms-2"></i>التقارير
                     </a>
+                    <a href="packages.php" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box ms-2"></i>الباقات
+                    </a>
                     <a href="../logout.php" class="list-group-item list-group-item-action text-danger">
                         <i class="fas fa-sign-out-alt ms-2"></i>تسجيل الخروج
                     </a>

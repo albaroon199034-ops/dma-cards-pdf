@@ -31,14 +31,14 @@ if (isset($_POST['send_email'])) {
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'chatgazawy@gmail.com';
-            $mail->Password   = 'vctt louq cact tach';
+            $mail->Username   = 'shekoom484@gmail.com';
+            $mail->Password   = 'cckf fdyu whyg ratk';
             $mail->SMTPSecure = 'ssl';
             $mail->Port       = 465;
             $mail->CharSet    = 'UTF-8';
 
             // المرسل والمستقبل
-            $mail->setFrom('chatgazawy@gmail.com', 'print.gazawy.com');
+            $mail->setFrom('shekoom484@gmail.com', 'print.gazawy.com');
             $mail->addAddress($license['email'], $license['username']);
 
             // المحتوى

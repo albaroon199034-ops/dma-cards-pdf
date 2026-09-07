@@ -1,8 +1,8 @@
 <?php
-$host = 'sql212.infinityfree.com';
-$dbname = 'if0_37574528_print_system';
-$username = 'if0_37574528';
-$password = 'LklW26HKtyhD';
+$host = 'localhost';
+$dbname = 'print_system';
+$username = 'root';
+$password = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);

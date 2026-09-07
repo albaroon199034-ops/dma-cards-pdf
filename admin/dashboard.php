@@ -34,7 +34,7 @@ $activities = $pdo->query("
 
 <div class="container-fluid py-4">
     <div class="row">
-    <div class="col-md-3">
+        <div class="col-md-3">
             <div class="card shadow-sm admin-sidebar">
                 <div class="card-header bg-gradient bg-dark text-white">
                     <h5 class="mb-0"><i class="fas fa-tachometer-alt ms-2"></i>لوحة التحكم</h5>
@@ -52,13 +52,16 @@ $activities = $pdo->query("
                     <a href="reports.php" class="list-group-item list-group-item-action">
                         <i class="fas fa-chart-bar ms-2"></i>التقارير
                     </a>
+                    <a href="packages.php" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box ms-2"></i>الباقات
+                    </a>
                     <a href="../logout.php" class="list-group-item list-group-item-action text-danger">
                         <i class="fas fa-sign-out-alt ms-2"></i>تسجيل الخروج
                     </a>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-9">
             <div class="row">
                 <div class="col-md-3 mb-4">
@@ -123,14 +126,19 @@ $activities = $pdo->query("
                                 </tr>
                             </thead>
                             <tbody>
-                            <?php foreach($activities as $activity): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($activity['username']); ?></td>
-                                    <td><code><?php echo substr(htmlspecialchars($activity['license_key']), 0, 8) . '...'; ?></code></td>
-                                    <td><span class="badge bg-success"><?php echo number_format($activity['cards_used']); ?></span></td>
-                                    <td><small class="text-muted"><?php echo date('Y-m-d H:i', strtotime($activity['usage_date'])); ?></small></td>
-                                </tr>
-                            <?php endforeach; ?>
+                                <?php foreach ($activities as $activity): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($activity['username']); ?></td>
+                                        <td><code><?php echo substr(htmlspecialchars($activity['license_key']), 0, 8) . '...'; ?></code>
+                                        </td>
+                                        <td><span
+                                                class="badge bg-success"><?php echo number_format($activity['cards_used']); ?></span>
+                                        </td>
+                                        <td><small
+                                                class="text-muted"><?php echo date('Y-m-d H:i', strtotime($activity['usage_date'])); ?></small>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
@@ -141,27 +149,32 @@ $activities = $pdo->query("
 </div>
 
 <style>
-body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
-}
-.card {
-    border: none;
-    transition: transform 0.2s;
-}
-.card:hover {
-    transform: translateY(-5px);
-}
-.bg-gradient {
-    background: linear-gradient(to right, #ffffff, #f8f9fa);
-}
-.list-group-item-action:hover {
-    background-color: #f8f9fa;
-    transform: translateX(-5px);
-    transition: all 0.2s;
-}
-.table td {
-    vertical-align: middle;
-}
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    }
+
+    .card {
+        border: none;
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .bg-gradient {
+        background: linear-gradient(to right, #ffffff, #f8f9fa);
+    }
+
+    .list-group-item-action:hover {
+        background-color: #f8f9fa;
+        transform: translateX(-5px);
+        transition: all 0.2s;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
 </style>
 
 <?php include '../inc/footer.php'; ?>

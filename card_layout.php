@@ -33,6 +33,10 @@ $card_design_path = UPLOAD_DIR . "card_design_" . time() . "_" . basename($_FILE
 if (!move_uploaded_file($card_file, $card_design_path)) {
     die("فشل رفع صورة تصميم الكارت.");
 }
+
+if (isset($_POST['system_type'])) {
+    $_SESSION['system_type'] = $_POST['system_type'];
+}
 ?>
 <?php include 'inc/header.php'; ?>
 <div class="container py-0">
@@ -68,13 +72,20 @@ if (!move_uploaded_file($card_file, $card_design_path)) {
                                 <label class="form-label fw-bold">حجم الخط</label>
                                 <select id="fontSize" class="form-select">
                                     <?php for ($i = 10; $i <= 32; $i += 2): ?>
-                                        <option value="<?php echo $i ?>"><?php echo $i ?>px</option>
+                                        <option value="<?php echo $i ?>" <?php echo ($i == 10 ? 'selected' : '') ?>><?php echo $i ?>px</option>
                                     <?php endfor; ?>
                                 </select>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-bold">لون الخط</label>
-                                <input type="color" id="fontColor" class="form-control form-control-color w-100" value="#ffffff">
+                                <input type="color" id="fontColor" class="form-control form-control-color w-100" value="#000000">
+                                <script>
+                                    // تعيين القيم الافتراضية
+                                    $(document).ready(function() {
+                                        $("#fontSize").val("10").trigger("change");
+                                        $("#fontColor").val("#000000").trigger("change");
+                                    });
+                                </script>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-bold">تخطيط الكروت</label>
@@ -98,7 +109,7 @@ if (!move_uploaded_file($card_file, $card_design_path)) {
     </div>
 </div>
 <form action="generate_cards.php" method="POST">
-    <input type="hidden" name="font_size" id="font_size" value="12">
+    <input type="hidden" name="font_size" id="font_size" value="10">
     <input type="hidden" name="cards_layout" id="cards_layout" value="10">
     <input type="hidden" name="csv_data" value="<?php echo $csv_encoded; ?>">
     <input type="hidden" name="card_design_path" value="<?php echo $card_design_path; ?>">
@@ -106,7 +117,7 @@ if (!move_uploaded_file($card_file, $card_design_path)) {
     <input type="hidden" name="username_y" id="username_y" value="10">
     <input type="hidden" name="password_x" id="password_x" value="10">
     <input type="hidden" name="password_y" id="password_y" value="40">
-    <input type="hidden" name="font_color" id="font_color" value="#ffffff">
+    <input type="hidden" name="font_color" id="font_color" value="#000000">
 
     <div class="text-center">
         <button type="submit" class="btn btn-danger btn-lg px-5">
