@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['license_id'])) {
     exit();
 }
 
-if (!isset($_POST['csv_data'], $_POST['card_design_path'], $_POST['username_x'], $_POST['username_y'], $_POST['password_x'], $_POST['password_y'], $_POST['font_size'], $_POST['cards_layout'])) {
+if (!isset($_POST['csv_data'], $_POST['source_file_type'], $_POST['card_design_path'], $_POST['username_x'], $_POST['username_y'], $_POST['password_x'], $_POST['password_y'], $_POST['font_size'], $_POST['cards_layout'])) {
     echo "لم يتم تقديم البيانات المطلوبة.";
     echo '<br>';
     echo 'سيتم تحويلك إلى الصفحة الرئيسية بعد 2 ثانية...';
@@ -30,14 +30,32 @@ $text_color = array($font_color[0], $font_color[1], $font_color[2]);
 
 $csv_data_encoded = $_POST['csv_data'];
 $csv_data = base64_decode($csv_data_encoded);
-$temp_csv = tempnam(sys_get_temp_dir(), 'csv');
+$source_file_type = $_POST['source_file_type'];
+if (!in_array($source_file_type, ['csv', 'xlsx', 'pdf'], true)) {
+    die('نوع ملف البيانات غير صالح.');
+}
+$temp_csv = tempnam(sys_get_temp_dir(), 'data_');
 file_put_contents($temp_csv, $csv_data);
 
 // تحديد نوع النظام من الجلسة
 $system_type = $_SESSION['system_type'] ?? 'redis';
 
 $arr = array();
-$file = fopen($temp_csv, 'r');
+$file = $source_file_type === 'csv' ? fopen($temp_csv, 'r') : null;
+$xlsx_rows = [];
+if ($source_file_type === 'xlsx') {
+    if (!class_exists('ZipArchive')) {
+        die('لا يمكن قراءة ملفات Excel لأن امتداد PHP Zip غير مفعّل على الخادم.');
+    }
+    require_once 'vendor/autoload.php';
+    try {
+        // The temporary upload has no .xlsx suffix, so explicitly select the reader.
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx')->load($temp_csv);
+        $xlsx_rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
+    } catch (\Throwable $exception) {
+        die('تعذر قراءة ملف Excel.');
+    }
+}
 
 if ($system_type === 'hawai') {
     // معالجة ملف PDF الهوائي
@@ -77,7 +95,10 @@ if ($system_type === 'hawai') {
     }
 } elseif ($system_type === 'pallet') {
     // معالجة ملف باليت
-    while (($row = fgetcsv($file, 0, '"')) !== FALSE) {
+    $pallet_rows = $source_file_type === 'xlsx'
+        ? array_map(static fn($row) => [implode(' ', array_filter($row, static fn($value) => $value !== null && $value !== ''))], $xlsx_rows)
+        : [];
+    while ($source_file_type === 'xlsx' ? ($row = array_shift($pallet_rows)) !== null : ($row = fgetcsv($file, 0, '"')) !== FALSE) {
         if (empty($row[0])) continue;
         
         // تنظيف البيانات من علامات الاقتباس
@@ -91,7 +112,7 @@ if ($system_type === 'hawai') {
             if ($parts[$i-1] === 'Username' && isset($parts[$i])) {
                 $username = $parts[$i];
                 // قراءة السطر التالي للحصول على كلمة المرور
-                $next_row = fgetcsv($file, 0, '"');
+                $next_row = $source_file_type === 'xlsx' ? array_shift($pallet_rows) : fgetcsv($file, 0, '"');
                 if ($next_row) {
                     $password_parts = preg_split('/\s+/', trim($next_row[0]));
                     // الحصول على كلمة المرور المقابلة
@@ -108,18 +129,25 @@ if ($system_type === 'hawai') {
     }
 } else {
     // المعالجة الحالية لنظام رديس
-    fgetcsv($file); // تجاوز السطر الأول
-    while (($row = fgetcsv($file)) !== FALSE) {
+    $redis_rows = $source_file_type === 'xlsx' ? $xlsx_rows : [];
+    if ($source_file_type === 'csv') fgetcsv($file); // تجاوز السطر الأول
+    if ($source_file_type === 'xlsx') array_shift($redis_rows); // تجاوز السطر الأول
+    while ($source_file_type === 'xlsx' ? ($row = array_shift($redis_rows)) !== null : ($row = fgetcsv($file)) !== FALSE) {
         if (empty($row[0])) continue;
         $explode = explode(';', $row[0]);
-        if (empty($explode[1])) continue;
-        $username = str_replace('"', '', $explode[1]);
-        $password = str_replace('"', '', $explode[2]);
+        if ($source_file_type === 'xlsx' && !empty($row[1]) && !empty($row[2])) {
+            $username = trim((string) $row[1]);
+            $password = trim((string) $row[2]);
+        } else {
+            if (empty($explode[1]) || empty($explode[2])) continue;
+            $username = str_replace('"', '', $explode[1]);
+            $password = str_replace('"', '', $explode[2]);
+        }
         $arr[] = array('username' => $username, 'password' => $password);
     }
 }
 
-fclose($file);
+if ($file !== null) fclose($file);
 unlink($temp_csv);
 
 $card_design_path = $_POST['card_design_path'];

@@ -11,16 +11,41 @@ if (!isset($_FILES['csv_file']) || !isset($_FILES['card_design'])) {
 
 include 'ini.php';
 include 'config/db.php';
-$csv_file = $_FILES['csv_file']['tmp_name'];
-$row_count = count(file($csv_file)) - 1; 
-if ($row_count > $_SESSION['remaining_cards']) {
-    die("عذراً، عدد السجلات في ملف CSV يتجاوز عدد الكروت المتبقية في ترخيصك");
-}
-$_SESSION['cards_to_print'] = $row_count;
 if ($_FILES['csv_file']['error'] != 0 || $_FILES['card_design']['error'] != 0) {
     die("حدث خطأ أثناء رفع الملفات.");
 }
 $csv_file = $_FILES['csv_file']['tmp_name'];
+$system_type = $_POST['system_type'] ?? '';
+$file_extension = strtolower(pathinfo($_FILES['csv_file']['name'], PATHINFO_EXTENSION));
+$allowed_extensions = $system_type === 'hawai' ? ['pdf'] : ['csv', 'xlsx'];
+if (!in_array($file_extension, $allowed_extensions, true)) {
+    die("نوع ملف البيانات غير صالح للنظام المختار.");
+}
+
+if ($file_extension === 'xlsx') {
+    if (!class_exists('ZipArchive')) {
+        die("لا يمكن قراءة ملفات Excel لأن امتداد PHP Zip غير مفعّل على الخادم.");
+    }
+    require_once 'vendor/autoload.php';
+    try {
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($csv_file);
+        $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
+        $row_count = count(array_filter(array_slice($rows, 1), static function ($row) {
+            return count(array_filter($row, static fn($value) => $value !== null && $value !== '')) > 0;
+        }));
+    } catch (\Throwable $exception) {
+        die("تعذر قراءة ملف Excel. تأكد من أنه ملف XLSX صالح.");
+    }
+} elseif ($file_extension === 'csv') {
+    $row_count = max(0, count(file($csv_file, FILE_SKIP_EMPTY_LINES)) - 1);
+} else {
+    // PDF records are parsed when cards are generated; do not count binary PDF lines as records.
+    $row_count = 0;
+}
+if ($row_count > $_SESSION['remaining_cards']) {
+    die("عذراً، عدد السجلات في الملف يتجاوز عدد الكروت المتبقية في ترخيصك");
+}
+$_SESSION['cards_to_print'] = $row_count;
 $csv_content = file_get_contents($csv_file);
 $csv_encoded = base64_encode($csv_content);
 $card_file = $_FILES['card_design']['tmp_name'];
@@ -34,8 +59,8 @@ if (!move_uploaded_file($card_file, $card_design_path)) {
     die("فشل رفع صورة تصميم الكارت.");
 }
 
-if (isset($_POST['system_type'])) {
-    $_SESSION['system_type'] = $_POST['system_type'];
+if ($system_type !== '') {
+    $_SESSION['system_type'] = $system_type;
 }
 ?>
 <?php include 'inc/header.php'; ?>
@@ -112,6 +137,7 @@ if (isset($_POST['system_type'])) {
     <input type="hidden" name="font_size" id="font_size" value="10">
     <input type="hidden" name="cards_layout" id="cards_layout" value="10">
     <input type="hidden" name="csv_data" value="<?php echo $csv_encoded; ?>">
+    <input type="hidden" name="source_file_type" value="<?php echo htmlspecialchars($file_extension, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="hidden" name="card_design_path" value="<?php echo $card_design_path; ?>">
     <input type="hidden" name="username_x" id="username_x" value="10">
     <input type="hidden" name="username_y" id="username_y" value="10">

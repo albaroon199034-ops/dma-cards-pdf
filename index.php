@@ -117,9 +117,9 @@ $has_active_license = isset($_SESSION['license_id']);
                                 </select>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">اختر ملف CSV:</label>
+                                        <label class="form-label fw-bold">اختر ملف البيانات (CSV أو Excel):</label>
                                         <div class="upload-area">
-                                            <input type="file" class="file-input" name="csv_file" id="csv_file" accept=".csv,.pdf,.xlsx" required hidden>
+                                            <input type="file" class="file-input" name="csv_file" id="csv_file" accept=".csv,.xlsx,.pdf" required hidden>
                                             <div class="drop-zone text-center p-5 rounded" id="csvDropZone">
                                                 <i class="fas fa-file-csv fa-3x mb-3 text-primary"></i>
                                                 <h4>اسحب الملف هنا</h4>
@@ -253,9 +253,9 @@ $has_active_license = isset($_SESSION['license_id']);
                 csvIcon.className = 'fas fa-file-pdf fa-3x mb-3 text-primary';
                 csvDropZone.querySelector('h4').textContent = 'اسحب ملف PDF هنا';
             } else {
-                csvFileInput.accept = '.csv';
+                csvFileInput.accept = '.csv,.xlsx';
                 csvIcon.className = 'fas fa-file-csv fa-3x mb-3 text-primary';
-                csvDropZone.querySelector('h4').textContent = 'اسحب ملف CSV هنا';
+                csvDropZone.querySelector('h4').textContent = 'اسحب ملف CSV أو Excel هنا';
             }
         }
 
@@ -298,8 +298,8 @@ $has_active_license = isset($_SESSION['license_id']);
                             return false;
                         }
                     } else {
-                        if (!file.name.toLowerCase().endsWith('.csv')) {
-                            errorElement.textContent = 'يرجى اختيار ملف CSV صالح';
+                        if (!/\.(csv|xlsx)$/i.test(file.name)) {
+                            errorElement.textContent = 'يرجى اختيار ملف CSV أو Excel صالح';
                             errorElement.style.display = 'block';
                             return false;
                         }
@@ -369,7 +369,8 @@ $has_active_license = isset($_SESSION['license_id']);
         const csvFile = document.getElementById('csv_file').files[0];
         const remainingCards = <?php echo $_SESSION['remaining_cards']; ?>;
 
-        if (csvFile) {
+        // Excel files are counted securely on the server because they are binary files.
+        if (csvFile && csvFile.name.toLowerCase().endsWith('.csv')) {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const text = e.target.result;
